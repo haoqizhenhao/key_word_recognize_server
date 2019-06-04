@@ -3,7 +3,6 @@ import platform
 from utils.logging import LOG
 from flask import Flask, request
 
-
 # 加载关键词识别模块
 import recognition
 
@@ -23,7 +22,8 @@ kws = recognition.KWS(model_dir='model/CNN_L.pb')
 def upload_file():
     if request.method == 'POST':
         get_detail = request.form
-
+        get_file = request.files
+        print(get_file)
         try:
             way = get_detail['way']
         except Exception as e:
@@ -40,16 +40,33 @@ def upload_file():
             log.error(str(get_detail) + 'stat:no right wav')
             return 'stat:no right wav'
 
-        if way == 'KWS':
+        try:
+            file_realtime = get_file['file']
+            print('******', file_realtime)
+        except Exception as e:
+            log.error("[get_error]" + str(e))
+            print('no right wav')
+            log.error(str(get_detail) + 'stat:no right wav')
+            return 'stat:no right wav'
+
+        if way == 'file':
             try:
-                return_table = kws.rec(wav_name)
+                return_table = kws.recognize_file(wav_name)
             except:
                 log.error(str(wav_name) + 'stat:model deal error')
                 print('model deal error !')
                 return 'stat:model deal error'
+            return return_table
 
+        if way == 'real_time':
+            try:
+                return_table = kws.recognize_realtime(wav_stream=file_realtime)
+            except:
+                # log.error(str(wav_name) + 'stat:model deal error')
+                print('model deal error !')
+                return 'stat:model deal error'
             return return_table
 
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000)
+    app.run(host='127.0.0.3', port=5000)
